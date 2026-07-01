@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Feliz Cumpleaños Princesa!</title>
+    <style>
+        /* Configuración Básica */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ffe5ec, #ffc2d1);
+            font-family: 'Arial Rounded MT Bold', 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+
+        /* Contenedor del efecto 3D */
+        .card-container {
+            width: 350px;
+            height: 450px;
+            perspective: 1000px; /* Le da la profundidad 3D */
+            cursor: pointer;
+        }
+
+        /* La tarjeta que va a girar */
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border-radius: 20px;
+        }
+
+        /* Girar la tarjeta al pasar el mouse o hacer click */
+        .card-container:hover .card, .card-container.active .card {
+            transform: rotateY(180deg);
+        }
+
+        /* Caras de la tarjeta (Común) */
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* Oculta la otra cara al girar */
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        /* Cara Frontal */
+        .card-front {
+            background: white;
+            color: #ff5c8a;
+            border: 5px solid #ffb3c6;
+        }
+
+        .card-front h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .cake-emoji {
+            font-size: 5rem;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        .date {
+            background: #ff5c8a;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        /* Cara Trasera (El mensaje) */
+        .card-back {
+            background: linear-gradient(45deg, #ff85a1, #ff5c8a);
+            color: white;
+            transform: rotateY(180deg); /* Espejo inicial para que al girar se vea bien */
+            border: 5px solid #fff;
+        }
+
+        .card-back h2 {
+            font-size: 2rem;
+            margin-top: 0;
+        }
+
+        .card-back p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        .hearts {
+            font-size: 2.5rem;
+            margin-top: 15px;
+        }
+
+        /* Animación de flotado para el pastel */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* Canvas para el confeti de fondo */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .instruccion {
+            position: absolute;
+            bottom: 30px;
+            color: #ff758f;
+            font-size: 0.9rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti"></canvas>
+
+    <div class="card-container" onclick="this.classList.toggle('active')">
+        <div class="card">
+            
+            <div class="card-front">
+                <div class="cake-emoji">🎂</div>
+                <h1>¡Feliz Cumpleaños!</h1>
+                <p>Para una niña hermosa y muy especial</p>
+                <div class="date">1 de Julio</div>
+            </div>
+            
+            <div class="card-back">
+                <h2>¡Felicidades! 🎉</h2>
+                <p>Hoy es un día mágico. Deseo que tu día esté lleno de risas, regalos, dulces y muchísima felicidad. ¡Nunca dejes de brillar, princesita!</p>
+                <div class="hearts">✨💖👑✨</div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="instruccion">Toca o pasa el mouse sobre la tarjeta</div>
+
+    <script>
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        let pieces = [];
+        const numberOfPieces = 100;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class ConfettiPiece {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height - canvas.height;
+                this.size = Math.random() * 8 + 5;
+                this.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
+                this.speed = Math.random() * 3 + 2;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() * 2 - 1;
+            }
+            update() {
+                this.y += this.speed;
+                this.rotation += this.rotationSpeed;
+                if (this.y > canvas.height) {
+                    this.y = -20;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+                ctx.restore();
+            }
+        }
+
+        function init() {
+            resizeCanvas();
+            for (let i = 0; i < numberOfPieces; i++) {
+                pieces.push(new ConfettiPiece());
+            }
+            animate();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            pieces.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        init();
+    </script>
+</body>
+</html>
