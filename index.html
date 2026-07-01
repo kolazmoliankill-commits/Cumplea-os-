@@ -21,7 +21,7 @@
         /* Contenedor del efecto 3D */
         .card-container {
             width: 350px;
-            height: 450px;
+            height: 480px;
             perspective: 1000px; /* Le da la profundidad 3D */
             cursor: pointer;
         }
@@ -33,7 +33,7 @@
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
             border-radius: 20px;
         }
 
@@ -53,7 +53,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 25px;
             box-sizing: border-box;
             text-align: center;
         }
@@ -86,28 +86,66 @@
             font-weight: bold;
         }
 
-        /* Cara Trasera (El mensaje) */
+        /* Cara Trasera (El mensaje y reproductor) */
         .card-back {
             background: linear-gradient(45deg, #ff85a1, #ff5c8a);
             color: white;
-            transform: rotateY(180deg); /* Espejo inicial para que al girar se vea bien */
+            transform: rotateY(180deg); /* Espejo inicial para el giro 3D */
             border: 5px solid #fff;
         }
 
         .card-back h2 {
             font-size: 2rem;
             margin-top: 0;
+            margin-bottom: 10px;
         }
 
         .card-back p {
-            font-size: 1.1rem;
-            line-height: 1.6;
+            font-size: 1.05rem;
+            line-height: 1.5;
             font-weight: 300;
+            margin-bottom: 20px;
         }
 
-        .hearts {
-            font-size: 2.5rem;
-            margin-top: 15px;
+        /* Botón de Audio 3D Hermoso */
+        .audio-btn {
+            background: white;
+            color: #ff5c8a;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            outline: none;
+        }
+
+        .audio-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .audio-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Animación de latido para el corazón del botón cuando suena */
+        .playing .btn-icon {
+            animation: heartbeat 0.8s infinite;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            20% { transform: scale(1.3); }
+            40% { transform: scale(1); }
+            60% { transform: scale(1.2); }
+            80% { transform: scale(1); }
+            100% { transform: scale(1); }
         }
 
         /* Animación de flotado para el pastel */
@@ -129,10 +167,11 @@
 
         .instruccion {
             position: absolute;
-            bottom: 30px;
+            bottom: 25px;
             color: #ff758f;
             font-size: 0.9rem;
             animation: pulse 1.5s infinite;
+            font-weight: bold;
         }
 
         @keyframes pulse {
@@ -143,9 +182,11 @@
 </head>
 <body>
 
+    <audio id="cumpleAudio" src="audio1.mp3" preload="auto"></audio>
+
     <canvas id="confetti"></canvas>
 
-    <div class="card-container" onclick="this.classList.toggle('active')">
+    <div class="card-container" onclick="toggleCard(this, event)">
         <div class="card">
             
             <div class="card-front">
@@ -157,16 +198,51 @@
             
             <div class="card-back">
                 <h2>¡Felicidades! 🎉</h2>
-                <p>Hoy es un día mágico. Deseo que tu día esté lleno de risas, regalos, dulces y muchísima felicidad. ¡Nunca dejes de brillar, princesita!</p>
-                <div class="hearts">✨💖👑✨</div>
+                <p>Hoy es un día mágico. Deseo que tu vida esté llena de risas, sorpresas, dulces y muchísima felicidad. ¡Nunca dejes de brillar, princesita!</p>
+                
+                <button class="audio-btn" id="musicBtn" onclick="toggleMusic(event)">
+                    <span class="btn-icon">💖</span>
+                    <span id="btnText">Escuchar sorpresa</span>
+                </button>
             </div>
 
         </div>
     </div>
 
-    <div class="instruccion">Toca o pasa el mouse sobre la tarjeta</div>
+    <div class="instruccion">Toca la tarjeta para voltearla</div>
 
     <script>
+        const audio = document.getElementById('cumpleAudio');
+        const musicBtn = document.getElementById('musicBtn');
+        const btnText = document.getElementById('btnText');
+
+        // Función para girar la tarjeta en móviles al hacer click
+        function toggleCard(container, event) {
+            // Si hace click en el botón de música, no queremos que la tarjeta se voltee de inmediato
+            if (event.target.closest('#musicBtn')) return;
+            container.classList.toggle('active');
+        }
+
+        // Función para reproducir / pausar la música
+        function toggleMusic(event) {
+            event.stopPropagation(); // Evita que la tarjeta se voltee al presionar el botón
+            
+            if (audio.paused) {
+                audio.play().then(() => {
+                    musicBtn.classList.add('playing');
+                    btnText.innerText = "Pausar música";
+                }).catch(error => {
+                    alert("Asegúrate de tener el archivo 'audio1.mp3' en la misma carpeta que este archivo.");
+                    console.log("Error al reproducir audio:", error);
+                });
+            } else {
+                audio.pause();
+                musicBtn.classList.remove('playing');
+                btnText.innerText = "Escuchar sorpresa";
+            }
+        }
+
+        // --- CÓDIGO DEL CONFETI ---
         const canvas = document.getElementById('confetti');
         const ctx = canvas.getContext('2d');
         let pieces = [];
